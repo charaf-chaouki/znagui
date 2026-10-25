@@ -1,0 +1,602 @@
+// Znagui Express — complete data model (dev: MySQL via WAMP).
+// See SFD-ZNAGUI.md §5 and ARCHITECTURE.md §6.
+// Commission RATES (D3–D6) live in the Setting table so undecided business
+// rules change computation code, never this schema.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+enum Role {
+  ADMIN
+  AGENCE
+  LIVREUR
+  CLIENT
+}
+
+enum AccountStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+enum VehicleType {
+  MOTO
+  VOITURE
+  CAMION
+}
+
+enum ColisType {
+  INTRA // même ville
+  INTER // inter-villes
+}
+
+enum ColisStatut {
+  CREE
+  DISPONIBLE_A_RAMASSER
+  AFFECTE_RAMASSAGE
+  RAMASSE
+  RECU_ENTREPOT_SOURCE
+  EN_EXPEDITION
+  RECU_PAR_AGENCE_DEST
+  DISPATCHE_LIVREUR
+  EN_COURS_DE_LIVRAISON
+  LIVRE
+  REPORTE
+  PAS_DE_REPONSE
+  REFUSE
+  RETOUR
+  ANNULE
+}
+
+enum RamassageStatut {
+  PLANIFIE
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+enum ExpeditionStatut {
+  NOUVEAU
+  EN_TRANSIT
+  RECEPTIONNE
+  ANNULE
+}
+
+enum ExpeditionLivreurStatut {
+  NOUVEAU
+  RECEPTIONNE
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+enum FactureStatut {
+  EN_ATTENTE
+  MONTANT_VERSE
+  PAYE
+}
+
+/// Per-colis state inside a batch line (ramassage / expédition).
+enum LigneStatut {
+  EN_ATTENTE // added to the batch, not yet scanned
+  CONFIRME   // scanned / collected / received
+  MANQUANT   // expected but not found
+}
+
+// ─── Auth ────────────────────────────────────────────────
+model Account {
+  id           String        @id @default(uuid()) @db.Char(36)
+  email        String?       @unique
+  phone        String?       @unique
+  passwordHash String        @map("password_hash")
+  role         Role          @default(CLIENT)
+  status       AccountStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  client  Client?
+  livreur Livreur?
+  agence  Agence?
+
+  // audit back-links
+  facturesLivreurCreated FactureLivreur[] @relation("FactureLivreurCreatedBy")
+  facturesLivreurPaid    FactureLivreur[] @relation("FactureLivreurPaidBy")
+  facturesClientCreated  FactureClient[]  @relation("FactureClientCreatedBy")
+  facturesAgenceCreated  FactureAgence[]  @relation("FactureAgenceCreatedBy")
+  colisEvents            ColisEvent[]
+
+  @@map("accounts")
+}
+
+// ─── Référentiel ─────────────────────────────────────────
+model Ville {
+  id        String   @id @default(uuid()) @db.Char(36)
+  nom       String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  agences          Agence[]
+  livreurs         Livreur[]
+  clients          Client[]
+  colisPickup      Colis[]   @relation("ColisPickupVille")
+  colisDestination Colis[]   @relation("ColisDestinationVille")
+
+  @@map("villes")
+}
+
+/// Key/value config: tarif grid + commission rates (D3–D6), set by admin.
+model Setting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+/// Société (single row, id = "default"). Used on factures, tickets, site.
+model Company {
+  id             String   @id @default("default")
+  raisonSociale  String   @default("") @map("raison_sociale")
+  nomCommercial  String   @default("") @map("nom_commercial")
+  formeJuridique String   @default("") @map("forme_juridique")
+  logo           String   @default("") @db.Text
+  ville          String   @default("")
+  adresse        String   @default("") @db.Text
+  telephone      String   @default("")
+  email          String   @default("")
+  siteWeb        String   @default("") @map("site_web")
+  ice            String   @default("")
+  rc             String   @default("")
+  idFiscal       String   @default("") @map("identifiant_fiscal")
+  patente        String   @default("")
+  cnss           String   @default("")
+  capital        String   @default("")
+  facebook       String   @default("") @db.Text
+  instagram      String   @default("") @db.Text
+  linkedin       String   @default("") @db.Text
+  youtube        String   @default("") @db.Text
+  tiktok         String   @default("") @db.Text
+  whatsapp       String   @default("")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("company")
+}
+
+// ─── Acteurs ─────────────────────────────────────────────
+model Agence {
+  id          String        @id @default(uuid()) @db.Char(36)
+  accountId   String        @unique @map("account_id") @db.Char(36)
+  nom         String
+  responsable String
+  villeId     String        @map("ville_id") @db.Char(36)
+  adresse     String?
+  telephone   String?
+  notes       String?       @db.Text
+  locationMap String?       @map("location_map") @db.Text
+  status      AccountStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  account            Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  ville              Ville               @relation(fields: [villeId], references: [id])
+  livreurs           Livreur[]
+  colisRamassage     Colis[]             @relation("ColisAgenceRamassage")
+  colisLivraison     Colis[]             @relation("ColisAgenceLivraison")
+  ramassages         Ramassage[]
+  expeditionsSource  Expedition[]        @relation("ExpeditionSource")
+  expeditionsDest    Expedition[]        @relation("ExpeditionDest")
+  expeditionsLivreur ExpeditionLivreur[]
+  facturesLivreur    FactureLivreur[]
+  facturesAgence     FactureAgence[]
+
+  @@index([villeId])
+  @@map("agences")
+}
+
+model Livreur {
+  id            String        @id @default(uuid()) @db.Char(36)
+  accountId     String        @unique @map("account_id") @db.Char(36)
+  agenceId      String        @map("agence_id") @db.Char(36)
+  nom           String
+  prenom        String
+  cni           String
+  telephone     String
+  ice           String?
+  banque        String?
+  rib           String?
+  cniRectoFile  String?       @map("cni_recto_file")
+  cniVersoFile  String?       @map("cni_verso_file")
+  ribFile       String?       @map("rib_file")
+  villeId       String        @map("ville_id") @db.Char(36)
+  adresse       String?
+  statusAccount AccountStatus @default(PENDING) @map("status_account")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  account            Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  agence             Agence              @relation(fields: [agenceId], references: [id])
+  ville              Ville               @relation(fields: [villeId], references: [id])
+  colisRamassage     Colis[]             @relation("ColisLivreurRamassage")
+  colisLivraison     Colis[]             @relation("ColisLivreurLivraison")
+  ramassages         Ramassage[]
+  expeditionsLivreur ExpeditionLivreur[]
+  facturesLivreur    FactureLivreur[]
+
+  @@index([agenceId])
+  @@index([villeId])
+  @@map("livreurs")
+}
+
+model Client {
+  id            String   @id @default(uuid()) @db.Char(36)
+  accountId     String   @unique @map("account_id") @db.Char(36)
+  nom           String
+  telephone     String
+  cni           String   @default("")
+  banque        String?
+  rib           String?
+  cniRectoFile  String?  @map("cni_recto_file")
+  cniVersoFile  String?  @map("cni_verso_file")
+  ribFile       String?  @map("rib_file")
+  villeId       String   @map("ville_id") @db.Char(36)
+  adresse       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  account         Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  ville           Ville           @relation(fields: [villeId], references: [id])
+  colis           Colis[]
+  facturesClient  FactureClient[]
+
+  @@index([villeId])
+  @@map("clients")
+}
+
+// ─── Colis ───────────────────────────────────────────────
+model Colis {
+  id             String      @id @default(uuid()) @db.Char(36)
+  trackingNumber String      @unique @map("tracking_number")
+  clientId       String      @map("client_id") @db.Char(36)
+  type           ColisType
+  statut         ColisStatut @default(CREE)
+
+  // Pickup
+  pickupVilleId String @map("pickup_ville_id") @db.Char(36)
+  pickupAddress String @map("pickup_address") @db.Text
+  pickupLat     Float? @map("pickup_lat")
+  pickupLng     Float? @map("pickup_lng")
+
+  // Destination
+  recipientName      String  @map("recipient_name")
+  recipientPhone     String  @map("recipient_phone")
+  destinationVilleId String  @map("destination_ville_id") @db.Char(36)
+  destinationAddress String  @map("destination_address") @db.Text
+  destinationLat     Float?  @map("destination_lat")
+  destinationLng     Float?  @map("destination_lng")
+  destinationMapLink String? @map("destination_map_link") @db.Text
+
+  // Details
+  notes           String?     @db.Text
+  vehicleType     VehicleType @default(MOTO) @map("vehicle_type")
+  parcelCount     Int         @default(1) @map("parcel_count")
+  contents        String      @db.Text
+  amountToCollect Decimal     @default(0) @map("amount_to_collect") @db.Decimal(12, 2)
+  tarif           Decimal     @default(0) @db.Decimal(12, 2)
+
+  // Assigned actors (filled during the workflow)
+  agenceRamassageId  String? @map("agence_ramassage_id") @db.Char(36)
+  agenceLivraisonId  String? @map("agence_livraison_id") @db.Char(36)
+  livreurRamassageId String? @map("livreur_ramassage_id") @db.Char(36)
+  livreurLivraisonId String? @map("livreur_livraison_id") @db.Char(36)
+
+  qrToken String? @unique @map("qr_token")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client           Client             @relation(fields: [clientId], references: [id])
+  pickupVille      Ville              @relation("ColisPickupVille", fields: [pickupVilleId], references: [id])
+  destinationVille Ville              @relation("ColisDestinationVille", fields: [destinationVilleId], references: [id])
+  agenceRamassage  Agence?            @relation("ColisAgenceRamassage", fields: [agenceRamassageId], references: [id])
+  agenceLivraison  Agence?            @relation("ColisAgenceLivraison", fields: [agenceLivraisonId], references: [id])
+  livreurRamassage Livreur? @relation("ColisLivreurRamassage", fields: [livreurRamassageId], references: [id])
+  livreurLivraison Livreur? @relation("ColisLivreurLivraison", fields: [livreurLivraisonId], references: [id])
+
+  events                  ColisEvent[]
+  ramassageLignes         RamassageLigne[]
+  expeditionLignes        ExpeditionLigne[]
+  expeditionLivreurLignes ExpeditionLivreurLigne[]
+  factureLivreurLignes    FactureLivreurLigne[]
+  factureClientLignes     FactureClientLigne[]
+  factureAgenceLignes     FactureAgenceLigne[]
+
+  @@index([clientId])
+  @@index([statut])
+  @@index([pickupVilleId])
+  @@index([destinationVilleId])
+  @@map("colis")
+}
+
+/// Colis status history (the historique the whole workflow builds on).
+model ColisEvent {
+  id              String      @id @default(uuid()) @db.Char(36)
+  colisId         String      @map("colis_id") @db.Char(36)
+  statut          ColisStatut
+  label           String
+  city            String?
+  note            String?     @db.Text
+  createdByAccountId String?  @map("created_by_account_id") @db.Char(36)
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  colis         Colis    @relation(fields: [colisId], references: [id], onDelete: Cascade)
+  createdByAccount Account? @relation(fields: [createdByAccountId], references: [id], onDelete: SetNull)
+
+  @@index([colisId])
+  @@map("colis_events")
+}
+
+// ─── Ramassage (pickup mission, agence X) ────────────────
+model Ramassage {
+  id          String          @id @default(uuid()) @db.Char(36)
+  reference   String?         @unique
+  agenceId    String          @map("agence_id") @db.Char(36)
+  livreurId   String          @map("livreur_id") @db.Char(36)
+  statut      RamassageStatut @default(PLANIFIE)
+  scheduledAt DateTime?       @map("scheduled_at")
+  completedAt DateTime?       @map("completed_at")
+  notes       String?         @db.Text
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  agence  Agence           @relation(fields: [agenceId], references: [id])
+  livreur Livreur          @relation(fields: [livreurId], references: [id])
+  lignes  RamassageLigne[]
+
+  @@index([agenceId])
+  @@index([livreurId])
+  @@index([statut])
+  @@map("ramassages")
+}
+
+model RamassageLigne {
+  id          String      @id @default(uuid()) @db.Char(36)
+  ramassageId String      @map("ramassage_id") @db.Char(36)
+  colisId     String      @map("colis_id") @db.Char(36)
+  statut      LigneStatut @default(EN_ATTENTE)
+  scannedAt   DateTime?   @map("scanned_at")
+  notes       String?     @db.Text
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  ramassage Ramassage @relation(fields: [ramassageId], references: [id], onDelete: Cascade)
+  colis     Colis     @relation(fields: [colisId], references: [id])
+
+  @@unique([ramassageId, colisId])
+  @@index([colisId])
+  @@map("ramassage_lignes")
+}
+
+// ─── Expedition (inter-agences: X → Y) ───────────────────
+model Expedition {
+  id            String           @id @default(uuid()) @db.Char(36)
+  reference     String?          @unique
+  agenceSourceId String          @map("agence_source_id") @db.Char(36)
+  agenceDestId  String           @map("agence_dest_id") @db.Char(36)
+  statut        ExpeditionStatut @default(NOUVEAU)
+  sentAt        DateTime?        @map("sent_at")
+  receivedAt    DateTime?        @map("received_at")
+  notes         String?          @db.Text
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  agenceSource Agence            @relation("ExpeditionSource", fields: [agenceSourceId], references: [id])
+  agenceDest   Agence            @relation("ExpeditionDest", fields: [agenceDestId], references: [id])
+  lignes       ExpeditionLigne[]
+
+  @@index([agenceSourceId])
+  @@index([agenceDestId])
+  @@index([statut])
+  @@map("expeditions")
+}
+
+model ExpeditionLigne {
+  id           String      @id @default(uuid()) @db.Char(36)
+  expeditionId String      @map("expedition_id") @db.Char(36)
+  colisId      String      @map("colis_id") @db.Char(36)
+  statut       LigneStatut @default(EN_ATTENTE)
+  receivedAt   DateTime?   @map("received_at")
+  notes        String?     @db.Text
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  expedition Expedition @relation(fields: [expeditionId], references: [id], onDelete: Cascade)
+  colis      Colis      @relation(fields: [colisId], references: [id])
+
+  @@unique([expeditionId, colisId])
+  @@index([colisId])
+  @@map("expedition_lignes")
+}
+
+// ─── Expedition Livreur (dispatch to a delivery driver) ──
+model ExpeditionLivreur {
+  id                  String                  @id @default(uuid()) @db.Char(36)
+  reference           String?                 @unique
+  agenceId            String                  @map("agence_id") @db.Char(36)
+  livreurId           String                  @map("livreur_id") @db.Char(36)
+  statut              ExpeditionLivreurStatut @default(NOUVEAU)
+  dispatchedAt        DateTime?               @map("dispatched_at")
+  receivedByLivreurAt DateTime?               @map("received_by_livreur_at")
+  notes               String?                 @db.Text
+  createdAt           DateTime                @default(now()) @map("created_at")
+  updatedAt           DateTime                @updatedAt @map("updated_at")
+
+  agence  Agence                   @relation(fields: [agenceId], references: [id])
+  livreur Livreur                  @relation(fields: [livreurId], references: [id])
+  lignes  ExpeditionLivreurLigne[]
+
+  @@index([agenceId])
+  @@index([livreurId])
+  @@index([statut])
+  @@map("expeditions_livreur")
+}
+
+model ExpeditionLivreurLigne {
+  id                  String      @id @default(uuid()) @db.Char(36)
+  expeditionLivreurId String      @map("expedition_livreur_id") @db.Char(36)
+  colisId             String      @map("colis_id") @db.Char(36)
+  statut              LigneStatut @default(EN_ATTENTE)
+  receivedAt          DateTime?   @map("received_at")
+  notes               String?     @db.Text
+  createdAt           DateTime    @default(now()) @map("created_at")
+
+  expeditionLivreur ExpeditionLivreur @relation(fields: [expeditionLivreurId], references: [id], onDelete: Cascade)
+  colis             Colis             @relation(fields: [colisId], references: [id])
+
+  @@unique([expeditionLivreurId, colisId])
+  @@index([colisId])
+  @@map("expedition_livreur_lignes")
+}
+
+// ─── Facturation ─────────────────────────────────────────
+// Amounts are stored fields; the commission computation (D3–D6) is applied
+// when the facture is generated, not modelled as a formula here.
+model FactureLivreur {
+  id                   String        @id @default(uuid()) @db.Char(36)
+  reference            String?       @unique
+  livreurId            String        @map("livreur_id") @db.Char(36)
+  agenceId             String        @map("agence_id") @db.Char(36)
+  periodeStart         DateTime?     @map("periode_start")
+  periodeEnd           DateTime?     @map("periode_end")
+  montantCollecte      Decimal       @default(0) @map("montant_collecte") @db.Decimal(14, 2)
+  tarifTotal           Decimal       @default(0) @map("tarif_total") @db.Decimal(14, 2)
+  commissionLivreur    Decimal       @default(0) @map("commission_livreur") @db.Decimal(14, 2)
+  montantAVerserAgence Decimal       @default(0) @map("montant_a_verser_agence") @db.Decimal(14, 2)
+  statut               FactureStatut @default(EN_ATTENTE)
+  pieceJointeUrl       String?       @map("piece_jointe_url")
+  notes                String?       @db.Text
+  createdByAccountId   String?       @map("created_by_account_id") @db.Char(36)
+  paidByAccountId      String?       @map("paid_by_account_id") @db.Char(36)
+  paidAt               DateTime?     @map("paid_at")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  livreur         Livreur               @relation(fields: [livreurId], references: [id])
+  agence          Agence                @relation(fields: [agenceId], references: [id])
+  createdByAccount Account?             @relation("FactureLivreurCreatedBy", fields: [createdByAccountId], references: [id], onDelete: SetNull)
+  paidByAccount   Account?              @relation("FactureLivreurPaidBy", fields: [paidByAccountId], references: [id], onDelete: SetNull)
+  lignes          FactureLivreurLigne[]
+
+  @@index([livreurId])
+  @@index([agenceId])
+  @@index([statut])
+  @@map("factures_livreur")
+}
+
+model FactureLivreurLigne {
+  id              String  @id @default(uuid()) @db.Char(36)
+  factureId       String  @map("facture_id") @db.Char(36)
+  colisId         String  @map("colis_id") @db.Char(36)
+  montantCollecte Decimal @default(0) @map("montant_collecte") @db.Decimal(12, 2)
+  tarif           Decimal @default(0) @db.Decimal(12, 2)
+  commission      Decimal @default(0) @db.Decimal(12, 2)
+
+  facture FactureLivreur @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  colis   Colis          @relation(fields: [colisId], references: [id])
+
+  @@unique([factureId, colisId]) // a colis is billed once per livreur facture (inter-villes → ramasseur + livreur)
+  @@index([factureId])
+  @@index([colisId])
+  @@map("factures_livreur_lignes")
+}
+
+// Admin-only client invoices.
+model FactureClient {
+  id                 String        @id @default(uuid()) @db.Char(36)
+  reference          String?       @unique
+  clientId           String        @map("client_id") @db.Char(36)
+  montantColisTotal  Decimal       @default(0) @map("montant_colis_total") @db.Decimal(14, 2)
+  montantTarifTotal  Decimal       @default(0) @map("montant_tarif_total") @db.Decimal(14, 2)
+  montantNet         Decimal       @default(0) @map("montant_net") @db.Decimal(14, 2)
+  statut             FactureStatut @default(EN_ATTENTE)
+  pieceJointeUrl     String?       @map("piece_jointe_url")
+  notes              String?       @db.Text
+  createdByAccountId String?       @map("created_by_account_id") @db.Char(36)
+  paidAt             DateTime?     @map("paid_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  client           Client               @relation(fields: [clientId], references: [id])
+  createdByAccount Account?             @relation("FactureClientCreatedBy", fields: [createdByAccountId], references: [id], onDelete: SetNull)
+  lignes           FactureClientLigne[]
+
+  @@index([clientId])
+  @@index([statut])
+  @@map("factures_client")
+}
+
+model FactureClientLigne {
+  id              String  @id @default(uuid()) @db.Char(36)
+  factureId       String  @map("facture_id") @db.Char(36)
+  colisId         String  @map("colis_id") @db.Char(36)
+  montantCollecte Decimal @default(0) @map("montant_collecte") @db.Decimal(12, 2)
+  tarif           Decimal @default(0) @db.Decimal(12, 2)
+
+  facture FactureClient @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  colis   Colis         @relation(fields: [colisId], references: [id])
+
+  @@unique([colisId]) // a delivered colis is invoiced to the client once
+  @@index([factureId])
+  @@map("factures_client_lignes")
+}
+
+// Direction → agence settlement: the agence's 20% cut on inter-villes delivered colis.
+model FactureAgence {
+  id                 String        @id @default(uuid()) @db.Char(36)
+  reference          String?       @unique
+  agenceId           String        @map("agence_id") @db.Char(36)
+  periodeStart       DateTime?     @map("periode_start")
+  periodeEnd         DateTime?     @map("periode_end")
+  montantTarifTotal  Decimal       @default(0) @map("montant_tarif_total") @db.Decimal(14, 2)
+  montantCollecte    Decimal       @default(0) @map("montant_collecte") @db.Decimal(14, 2)
+  commissionAgence   Decimal       @default(0) @map("commission_agence") @db.Decimal(14, 2)
+  montantAVerser     Decimal       @default(0) @map("montant_a_verser") @db.Decimal(14, 2)
+  statut             FactureStatut @default(EN_ATTENTE)
+  pieceJointeUrl     String?       @map("piece_jointe_url")
+  notes              String?       @db.Text
+  createdByAccountId String?       @map("created_by_account_id") @db.Char(36)
+  paidAt             DateTime?     @map("paid_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  agence           Agence               @relation(fields: [agenceId], references: [id])
+  createdByAccount Account?             @relation("FactureAgenceCreatedBy", fields: [createdByAccountId], references: [id], onDelete: SetNull)
+  lignes           FactureAgenceLigne[]
+
+  @@index([agenceId])
+  @@index([statut])
+  @@map("factures_agence")
+}
+
+model FactureAgenceLigne {
+  id         String  @id @default(uuid()) @db.Char(36)
+  factureId  String  @map("facture_id") @db.Char(36)
+  colisId    String  @map("colis_id") @db.Char(36)
+  role          String  @default("SOURCE") // SOURCE | DEST
+  tarif         Decimal @default(0) @db.Decimal(12, 2)
+  collecte      Decimal @default(0) @db.Decimal(12, 2)
+  commission    Decimal @default(0) @db.Decimal(12, 2)
+  montantAVerser Decimal @default(0) @map("montant_a_verser") @db.Decimal(12, 2)
+
+  facture FactureAgence @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  colis   Colis         @relation(fields: [colisId], references: [id])
+
+  @@unique([factureId, colisId])
+  @@index([factureId])
+  @@index([colisId])
+  @@map("factures_agence_lignes")
+}
