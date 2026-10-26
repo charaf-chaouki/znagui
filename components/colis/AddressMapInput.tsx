@@ -76,11 +76,11 @@ export function AddressMapInput({
       [start.lat, start.lng],
       coordsRef.current ? 14 : 5,
     );
-    // Carto basemaps — free for app use (OSM's public tiles block production: 403).
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", {
-      maxZoom: 20,
-      subdomains: "abcd",
-      attribution: "&copy; OpenStreetMap &copy; CARTO",
+    // Esri World Street Map — free raster tiles, no API key
+    // (OSM public tiles return 403 for apps; Carto now requires a key).
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19,
+      attribution: "Tiles &copy; Esri",
     }).addTo(map);
     map.on("click", async (e: any) => {
       const nc = { lat: e.latlng.lat, lng: e.latlng.lng };
