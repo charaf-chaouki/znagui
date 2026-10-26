@@ -76,9 +76,11 @@ export function AddressMapInput({
       [start.lat, start.lng],
       coordsRef.current ? 14 : 5,
     );
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap",
+    // Carto basemaps — free for app use (OSM's public tiles block production: 403).
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", {
+      maxZoom: 20,
+      subdomains: "abcd",
+      attribution: "&copy; OpenStreetMap &copy; CARTO",
     }).addTo(map);
     map.on("click", async (e: any) => {
       const nc = { lat: e.latlng.lat, lng: e.latlng.lng };
