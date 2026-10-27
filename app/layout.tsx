@@ -31,6 +31,11 @@ export const metadata: Metadata = {
   },
 };
 
+// The root layout reads the locale cookie for <html lang/dir>, so the whole app
+// renders per request. Mark it blocking so cacheComponents doesn't try (and fail)
+// to statically prerender routes like /_not-found.
+export const instant = false;
+
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getServerLocale();
   const dir = LOCALE_META[locale].dir;
