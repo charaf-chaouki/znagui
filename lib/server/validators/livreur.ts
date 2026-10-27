@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const STATUS = ["ACTIVE", "PENDING", "SUSPENDED", "INACTIVE"] as const;
+const VEHICLES = ["MOTO", "VOITURE", "CAMION"] as const;
 const opt = () => z.string().optional().nullable();
 
 const baseLivreur = {
@@ -8,6 +9,8 @@ const baseLivreur = {
   prenom: z.string().min(2, "Prénom requis"),
   cni: z.string().min(3, "CNI requise"),
   telephone: z.string().min(6, "Téléphone requis"),
+  vehicleType: z.enum(VEHICLES).default("MOTO"),
+  matricule: opt(),
   ice: opt(),
   banque: opt(),
   rib: opt(),

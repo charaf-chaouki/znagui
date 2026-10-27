@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, User, Building2, Landmark, IdCard, KeyRound, AlertCircle } from "lucide-react";
-import { MOROCCAN_CITIES } from "@/lib/constants";
+import { Loader2, User, Building2, Landmark, IdCard, KeyRound, AlertCircle, Truck } from "lucide-react";
+import { MOROCCAN_CITIES, VEHICLE_OPTIONS } from "@/lib/constants";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/dictionaries";
-import type { LivreurStatus } from "@/lib/types/livreur";
+import type { LivreurStatus, LivreurVehicle } from "@/lib/types/livreur";
 
 export type LivreurFormInitial = {
   nom?: string; prenom?: string; cni?: string; telephone?: string;
+  vehicleType?: LivreurVehicle; matricule?: string;
   ice?: string; banque?: string; rib?: string;
   cniRectoFile?: string | null; cniVersoFile?: string | null; ribFile?: string | null;
   ville?: string; adresse?: string; status?: LivreurStatus; agenceId?: string; email?: string;
@@ -41,7 +42,7 @@ export function LivreurForm({
 }) {
   const router = useRouter();
   const { t } = useI18n();
-  const [f, setF] = useState<LivreurFormInitial>({ status: "PENDING", ...initial });
+  const [f, setF] = useState<LivreurFormInitial>({ status: "PENDING", vehicleType: "MOTO", ...initial });
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export function LivreurForm({
     setError(null);
     const payload = {
       nom: f.nom, prenom: f.prenom, cni: f.cni, telephone: f.telephone,
+      vehicleType: f.vehicleType ?? "MOTO", matricule: f.matricule || null,
       ice: f.ice || null, banque: f.banque || null, rib: f.rib || null,
       cniRectoFile: f.cniRectoFile || null, cniVersoFile: f.cniVersoFile || null, ribFile: f.ribFile || null,
       ville: f.ville, adresse: f.adresse || null, status: f.status, agenceId: f.agenceId, email: f.email,
@@ -112,6 +114,21 @@ export function LivreurForm({
             <select value={f.status} onChange={(e) => set("status", e.target.value as LivreurStatus)} className={input}>
               {STATUS.map((s) => <option key={s.value} value={s.value}>{t(s.key)}</option>)}
             </select>
+          </div>
+        </div>
+      </Section>
+
+      <Section title={t("lf.vehicule")} icon={<Truck className="h-4 w-4" />}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={label}>{t("lf.typeVehicule")}</label>
+            <select value={f.vehicleType ?? "MOTO"} onChange={(e) => set("vehicleType", e.target.value as LivreurVehicle)} className={input}>
+              {VEHICLE_OPTIONS.map((v) => <option key={v.value} value={v.value}>{t(`veh.${v.value}` as MessageKey)}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={label}>{t("lf.matricule")} <span className="text-muted">{t("common.optional")}</span></label>
+            <input value={f.matricule ?? ""} onChange={(e) => set("matricule", e.target.value)} placeholder="12345-A-6" className={input} />
           </div>
         </div>
       </Section>

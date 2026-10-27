@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { getServerT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "Inscription",
   description: "Créez votre compte client Znagui Express en quelques secondes.",
 };
 
-export default function InscriptionPage() {
+export const instant = false;
+
+export default async function InscriptionPage() {
+  const { t } = await getServerT();
   return (
     <AuthShell
-      title="Créer un compte"
-      subtitle="Inscrivez-vous gratuitement pour envoyer et suivre vos colis."
-      panelHeading={<>Rejoignez<br />Znagui Express</>}
-      panelText="Créez votre compte client en quelques secondes et commencez à expédier partout au Maroc."
+      title={t("auth.registerTitle")}
+      subtitle={t("auth.registerSub")}
+      panelHeading={t("auth.registerPanelHeading")}
+      panelText={t("auth.registerPanelText")}
     >
       <RegisterForm />
     </AuthShell>

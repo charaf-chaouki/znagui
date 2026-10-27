@@ -10,6 +10,9 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { Faq } from "@/components/home/Faq";
 import { ContactSection } from "@/components/home/ContactSection";
 
+// Localized server components read the locale cookie → render per request.
+export const instant = false;
+
 export default function Home() {
   return (
     <>

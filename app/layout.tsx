@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
+import { getServerLocale } from "@/lib/i18n/server";
+import { LOCALE_META } from "@/lib/i18n/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,14 +31,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getServerLocale();
+  const dir = LOCALE_META[locale].dir;
   return (
     <html
-      lang="fr"
+      lang={locale}
+      dir={dir}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <LanguageProvider initialLocale={locale}>{children}</LanguageProvider>
       </body>
     </html>
   );

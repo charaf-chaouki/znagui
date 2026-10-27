@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
-
-const PERKS = [
-  "Suivi de vos colis en temps réel",
-  "Réseau d'agences partout au Maroc",
-  "Paiement à la livraison sécurisé",
-];
+import { getServerT } from "@/lib/i18n/server";
 
 type AuthShellProps = {
   title: string;
@@ -17,19 +12,18 @@ type AuthShellProps = {
   panelText?: string;
 };
 
-export function AuthShell({
+export async function AuthShell({
   title,
   subtitle,
   children,
-  panelHeading = (
-    <>
-      Bienvenue sur
-      <br />
-      Znagui Express
-    </>
-  ),
-  panelText = "Gérez vos colis, suivez vos livraisons et pilotez votre activité depuis un seul espace.",
+  panelHeading,
+  panelText,
 }: AuthShellProps) {
+  const { t } = await getServerT();
+  const heading = panelHeading ?? t("auth.panelHeading");
+  const text = panelText ?? t("auth.panelText");
+  const perks = [t("auth.perk1"), t("auth.perk2"), t("auth.perk3")];
+
   return (
     <main className="flex min-h-dvh flex-1">
       {/* Left — brand panel */}
@@ -37,10 +31,10 @@ export function AuthShell({
         <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
         <Logo variant="white" heightClass="h-10" />
         <div className="relative">
-          <h2 className="text-3xl font-extrabold leading-tight">{panelHeading}</h2>
-          <p className="mt-3 max-w-sm text-white/80">{panelText}</p>
+          <h2 className="text-3xl font-extrabold leading-tight">{heading}</h2>
+          <p className="mt-3 max-w-sm text-white/80">{text}</p>
           <ul className="mt-8 space-y-3">
-            {PERKS.map((p) => (
+            {perks.map((p) => (
               <li key={p} className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-white" />
                 <span className="text-sm text-white/90">{p}</span>
@@ -58,7 +52,7 @@ export function AuthShell({
             href="/"
             className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted hover:text-brand"
           >
-            <ArrowLeft className="h-4 w-4" /> Retour à l'accueil
+            <ArrowLeft className="h-4 w-4" /> {t("auth.backHome")}
           </Link>
 
           <div className="mb-8 lg:hidden">

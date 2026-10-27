@@ -38,6 +38,7 @@ export default async function ModifierLivreurPage({ params }: { params: Promise<
         redirectTo={`/admin/livreurs/${l.id}`}
         initial={{
           nom: l.nom, prenom: l.prenom, cni: l.cni, telephone: l.telephone,
+          vehicleType: l.vehicleType, matricule: l.matricule ?? "",
           ice: l.ice ?? "", banque: l.banque ?? "", rib: l.rib ?? "",
           cniRectoFile: l.cniRectoFile, cniVersoFile: l.cniVersoFile, ribFile: l.ribFile,
           ville: l.ville, adresse: l.adresse ?? "", status: l.status, agenceId: l.agenceId, email: l.email,

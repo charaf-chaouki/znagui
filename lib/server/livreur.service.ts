@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
-import type { LivreurRow, LivreurListResult, LivreurDetail, LivreurStatus } from "@/lib/types/livreur";
+import type { LivreurRow, LivreurListResult, LivreurDetail, LivreurStatus, LivreurVehicle } from "@/lib/types/livreur";
 import type { Prisma, AccountStatus } from "@prisma/client";
 
 export const PER_PAGE = 20;
@@ -53,6 +53,7 @@ export async function listLivreurs(
     telephone: l.telephone,
     ville: l.ville.nom,
     agence: l.agence.nom,
+    vehicleType: l.vehicleType as LivreurVehicle,
     livraisons: l._count.colisLivraison,
     status: l.statusAccount as LivreurStatus,
     email: l.account.email ?? "—",
@@ -78,6 +79,8 @@ export async function getLivreur(id: string): Promise<LivreurDetail | null> {
     prenom: l.prenom,
     cni: l.cni,
     telephone: l.telephone,
+    vehicleType: l.vehicleType as LivreurVehicle,
+    matricule: l.matricule,
     ice: l.ice,
     banque: l.banque,
     rib: l.rib,
@@ -101,6 +104,8 @@ export type LivreurData = {
   prenom: string;
   cni: string;
   telephone: string;
+  vehicleType: LivreurVehicle;
+  matricule?: string | null;
   ice?: string | null;
   banque?: string | null;
   rib?: string | null;
@@ -137,6 +142,8 @@ export async function createLivreur(data: LivreurData): Promise<{ id: string }> 
           prenom: data.prenom,
           cni: data.cni,
           telephone: data.telephone,
+          vehicleType: data.vehicleType,
+          matricule: data.matricule ?? null,
           ice: data.ice ?? null,
           banque: data.banque ?? null,
           rib: data.rib ?? null,
@@ -171,6 +178,8 @@ export async function updateLivreur(id: string, data: LivreurData): Promise<void
       prenom: data.prenom,
       cni: data.cni,
       telephone: data.telephone,
+      vehicleType: data.vehicleType,
+      matricule: data.matricule ?? null,
       ice: data.ice ?? null,
       banque: data.banque ?? null,
       rib: data.rib ?? null,

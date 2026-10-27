@@ -12,7 +12,7 @@ export async function ClientColisTable({ rows, emptyLabel }: { rows: ClientColis
     {
       header: t("col.trk"),
       cell: (c) => (
-        <Link href={`/client/suivi?trk=${encodeURIComponent(c.trk)}`} className="font-semibold text-brand-dark hover:text-brand">
+        <Link href={`/client/colis/${encodeURIComponent(c.trk)}`} className="font-semibold text-brand-dark hover:text-brand">
           {c.trk}
         </Link>
       ),

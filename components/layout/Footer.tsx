@@ -2,14 +2,22 @@ import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { getCompanySettingsCached } from "@/lib/server/settings.service";
+import { getServerT } from "@/lib/i18n/server";
+import type { MessageKey } from "@/lib/i18n/dictionaries";
 
-const SERVICES = ["Ramassage", "Livraison", "Retour colis", "Collecte cash", "Stockage"];
-const LINKS = [
-  { label: "Accueil", href: "/" },
-  { label: "Tarifs", href: "/tarifs" },
-  { label: "FAQ", href: "/#faq" },
-  { label: "Contact", href: "/#contact" },
-  { label: "S'inscrire", href: "/inscription" },
+const SERVICES: MessageKey[] = [
+  "home.services.ramassage.t",
+  "home.services.livraison.t",
+  "home.services.retour.t",
+  "home.services.cash.t",
+  "home.services.stockage.t",
+];
+const LINKS: { key: MessageKey; href: string }[] = [
+  { key: "home.footer.home", href: "/" },
+  { key: "home.nav.tarifs", href: "/tarifs" },
+  { key: "home.nav.faq", href: "/#faq" },
+  { key: "home.nav.contact", href: "/#contact" },
+  { key: "home.nav.signup", href: "/inscription" },
 ];
 
 // lucide v1 removed brand icons → inline SVG glyphs
@@ -48,6 +56,7 @@ function waLink(num: string): string {
 
 export async function Footer() {
   const c = await getCompanySettingsCached();
+  const { t } = await getServerT();
 
   const socials = [
     { label: "Facebook", href: c.facebook },
@@ -58,17 +67,14 @@ export async function Footer() {
     { label: "WhatsApp", href: waLink(c.whatsapp) },
   ].filter((s) => s.href.trim().length > 0);
 
-  const adresse = [c.adresse, c.ville].filter(Boolean).join(", ") || "Maroc";
+  const adresse = [c.adresse, c.ville].filter(Boolean).join(", ") || t("home.contact.morocco");
 
   return (
     <footer className="bg-[#070707] text-white/60">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Logo variant="white" href={null} heightClass="h-8" />
-          <p className="mt-4 text-sm leading-relaxed">
-            Znagui Express assure la collecte, la livraison et le retour de vos colis partout au
-            Maroc avec un suivi dédié de premier ordre.
-          </p>
+          <p className="mt-4 text-sm leading-relaxed">{t("home.footer.desc")}</p>
           {socials.length > 0 && (
             <div className="mt-5 flex gap-2">
               {socials.map((s) => (
@@ -99,29 +105,29 @@ export async function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wide text-white">Nos services</h4>
+          <h4 className="text-sm font-bold uppercase tracking-wide text-white">{t("home.footer.servicesTitle")}</h4>
           <ul className="mt-4 space-y-2 text-sm">
             {SERVICES.map((s) => (
               <li key={s}>
-                <Link href="/#services" className="hover:text-brand">{s}</Link>
+                <Link href="/#services" className="hover:text-brand">{t(s)}</Link>
               </li>
             ))}
           </ul>
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wide text-white">Liens utiles</h4>
+          <h4 className="text-sm font-bold uppercase tracking-wide text-white">{t("home.footer.linksTitle")}</h4>
           <ul className="mt-4 space-y-2 text-sm">
             {LINKS.map((l) => (
-              <li key={l.label}>
-                <Link href={l.href} className="hover:text-brand">{l.label}</Link>
+              <li key={l.key}>
+                <Link href={l.href} className="hover:text-brand">{t(l.key)}</Link>
               </li>
             ))}
           </ul>
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wide text-white">Contactez-nous</h4>
+          <h4 className="text-sm font-bold uppercase tracking-wide text-white">{t("home.footer.contactTitle")}</h4>
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {adresse}
@@ -144,7 +150,7 @@ export async function Footer() {
 
       <div className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-4 py-5 text-center text-xs text-white/50">
-          © 2026 {c.nomCommercial || "Znagui Express"}. Tous droits réservés.
+          © 2026 {c.nomCommercial || "Znagui Express"}. {t("home.footer.rights")}
         </div>
       </div>
     </footer>

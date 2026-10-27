@@ -7,8 +7,8 @@ import { homeForRole } from "@/lib/auth/session";
 
 const schema = z.object({
   cni: z.string().min(3, "CNI requise"),
-  banque: z.string().min(2, "Banque requise"),
-  rib: z.string().min(4, "RIB requis"),
+  banque: z.string().optional().nullable(),
+  rib: z.string().optional().nullable(),
   cniRectoFile: z.string().min(1, "Photo CIN recto requise"),
   cniVersoFile: z.string().min(1, "Photo CIN verso requise"),
   ribFile: z.string().optional().nullable(),
@@ -31,14 +31,14 @@ export async function POST(req: Request) {
 
   await prisma.client.update({
     where: { id: account.client.id },
-    data: { cni, banque, rib, cniRectoFile, cniVersoFile, ribFile: ribFile || null },
+    data: { cni, banque: banque || null, rib: rib || null, cniRectoFile, cniVersoFile, ribFile: ribFile || null },
   });
 
   // Onboarding complete; account stays PENDING until an admin/agence validates it.
   const gate = clientGate(account.status, {
     cni,
-    banque,
-    rib,
+    banque: banque ?? null,
+    rib: rib ?? null,
     cniRectoFile,
     cniVersoFile,
   });

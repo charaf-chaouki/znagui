@@ -31,12 +31,9 @@ export function OnboardingForm({ initial }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const complete =
-    cni.trim().length >= 3 &&
-    banque.trim().length >= 2 &&
-    rib.trim().length >= 4 &&
-    !!cniRectoFile &&
-    !!cniVersoFile;
+  // Bank details (banque + RIB) are optional; only the CNI number and both CNI
+  // photos are required to complete onboarding.
+  const complete = cni.trim().length >= 3 && !!cniRectoFile && !!cniVersoFile;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,12 +98,12 @@ export function OnboardingForm({ initial }: Props) {
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="banque" className="mb-1.5 block text-sm font-medium text-foreground">{t("onb.banque")}</label>
-              <input id="banque" required value={banque} onChange={(e) => setBanque(e.target.value)} placeholder={t("onb.banquePlaceholder")} className={inputCls} />
+              <label htmlFor="banque" className="mb-1.5 block text-sm font-medium text-foreground">{t("onb.banque")} <span className="text-muted">{t("common.optional")}</span></label>
+              <input id="banque" value={banque} onChange={(e) => setBanque(e.target.value)} placeholder={t("onb.banquePlaceholder")} className={inputCls} />
             </div>
             <div>
-              <label htmlFor="rib" className="mb-1.5 block text-sm font-medium text-foreground">{t("onb.rib")}</label>
-              <input id="rib" required value={rib} onChange={(e) => setRib(e.target.value)} placeholder={t("onb.ribPlaceholder")} className={inputCls} />
+              <label htmlFor="rib" className="mb-1.5 block text-sm font-medium text-foreground">{t("onb.rib")} <span className="text-muted">{t("common.optional")}</span></label>
+              <input id="rib" value={rib} onChange={(e) => setRib(e.target.value)} placeholder={t("onb.ribPlaceholder")} className={inputCls} />
             </div>
           </div>
           <FileUpload label={t("onb.ribFile")} value={ribFile} onChange={setRibFile} endpoint="/api/onboarding/upload" />

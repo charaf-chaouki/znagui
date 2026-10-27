@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2, User, Mail, Phone, MapPin, Lock } from "lucide-react";
+import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 const VILLES = [
   "Casablanca", "Rabat", "Marrakech", "Fès", "Tanger", "Agadir",
@@ -11,6 +12,7 @@ const VILLES = [
 ];
 
 export function RegisterForm() {
+  const { t } = useI18n();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -33,15 +35,15 @@ export function RegisterForm() {
     setError(null);
 
     if (form.password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères.");
+      setError(t("auth.errPwLen"));
       return;
     }
     if (form.password !== form.confirm) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("auth.errPwMatch"));
       return;
     }
     if (!form.terms) {
-      setError("Veuillez accepter les conditions d'utilisation.");
+      setError(t("auth.errTerms"));
       return;
     }
 
@@ -60,20 +62,20 @@ export function RegisterForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.message || "Impossible de créer le compte. Vérifiez vos informations.");
+        setError(data.message || t("auth.errCreate"));
         return;
       }
       // Account created + auto-logged in → go to the client space.
       window.location.href = data.redirectTo || "/client";
     } catch {
-      setError("Connexion impossible. Réessayez.");
+      setError(t("auth.errConn"));
     } finally {
       setLoading(false);
     }
   }
 
   const inputCls =
-    "w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/25";
+    "w-full rounded-lg border border-border bg-background py-2.5 pe-3 ps-10 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/25";
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -85,33 +87,33 @@ export function RegisterForm() {
 
       <div>
         <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
-          Nom complet
+          {t("auth.fullName")}
         </label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+          <User className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
           <input id="name" required value={form.name} onChange={(e) => set("name", e.target.value)}
-            placeholder="Votre nom complet" className={inputCls} />
+            placeholder={t("auth.fullNamePh")} className={inputCls} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-            Email
+            {t("col.email")}
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+            <Mail className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
             <input id="email" type="email" required value={form.email}
-              onChange={(e) => set("email", e.target.value)} placeholder="vous@exemple.ma"
+              onChange={(e) => set("email", e.target.value)} placeholder={t("auth.emailPh")}
               className={inputCls} />
           </div>
         </div>
         <div>
           <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
-            Téléphone
+            {t("col.telephone")}
           </label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+            <Phone className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
             <input id="phone" required value={form.phone}
               onChange={(e) => set("phone", e.target.value)} placeholder="06XXXXXXXX"
               className={inputCls} />
@@ -121,13 +123,13 @@ export function RegisterForm() {
 
       <div>
         <label htmlFor="ville" className="mb-1.5 block text-sm font-medium text-foreground">
-          Ville
+          {t("col.ville")}
         </label>
         <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+          <MapPin className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
           <select id="ville" required value={form.ville} onChange={(e) => set("ville", e.target.value)}
             className={`${inputCls} appearance-none`}>
-            <option value="" disabled>Choisissez votre ville</option>
+            <option value="" disabled>{t("auth.choisirVille")}</option>
             {VILLES.map((v) => <option key={v} value={v}>{v}</option>)}
           </select>
         </div>
@@ -136,26 +138,26 @@ export function RegisterForm() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
-            Mot de passe
+            {t("auth.password")}
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+            <Lock className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
             <input id="password" type={show ? "text" : "password"} required value={form.password}
               onChange={(e) => set("password", e.target.value)} placeholder="••••••••"
-              className={`${inputCls} pr-10`} />
+              className={`${inputCls} pe-10`} />
             <button type="button" onClick={() => setShow((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
-              aria-label={show ? "Masquer" : "Afficher"}>
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+              aria-label={show ? t("auth.hide") : t("auth.show")}>
               {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
         </div>
         <div>
           <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-foreground">
-            Confirmer
+            {t("auth.confirm")}
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+            <Lock className="absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
             <input id="confirm" type={show ? "text" : "password"} required value={form.confirm}
               onChange={(e) => set("confirm", e.target.value)} placeholder="••••••••"
               className={inputCls} />
@@ -167,13 +169,13 @@ export function RegisterForm() {
         <input type="checkbox" checked={form.terms} onChange={(e) => set("terms", e.target.checked)}
           className="mt-0.5 h-4 w-4 rounded border-border accent-[var(--brand)]" />
         <span>
-          J'accepte les{" "}
+          {t("auth.terms1")}{" "}
           <Link href="/conditions" className="font-medium text-brand hover:underline">
-            conditions d'utilisation
+            {t("auth.termsLink")}
           </Link>{" "}
-          et la{" "}
+          {t("auth.terms2")}{" "}
           <Link href="/confidentialite" className="font-medium text-brand hover:underline">
-            politique de confidentialité
+            {t("auth.privacyLink")}
           </Link>.
         </span>
       </label>
@@ -181,13 +183,13 @@ export function RegisterForm() {
       <button type="submit" disabled={loading}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-brand-contrast transition hover:bg-brand-dark disabled:opacity-60">
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        Créer mon compte
+        {t("auth.createMyAccount")}
       </button>
 
       <p className="text-center text-sm text-muted">
-        Déjà un compte ?{" "}
+        {t("auth.haveAccount")}{" "}
         <Link href="/connexion" className="font-semibold text-brand hover:underline">
-          Se connecter
+          {t("auth.signin")}
         </Link>
       </p>
     </form>

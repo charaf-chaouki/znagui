@@ -10,18 +10,12 @@ export type OnboardingClient = {
 } | null | undefined;
 
 /**
- * A client is considered onboarded once it has provided its CNI number, bank
- * details (banque + RIB) and both CNI photos. The RIB file stays optional.
+ * A client is considered onboarded once it has provided its CNI number and both
+ * CNI photos. Bank details (banque + RIB) and the RIB file stay optional.
  */
 export function isClientOnboarded(c: OnboardingClient): boolean {
   if (!c) return false;
-  return Boolean(
-    c.cni?.trim() &&
-      c.banque?.trim() &&
-      c.rib?.trim() &&
-      c.cniRectoFile &&
-      c.cniVersoFile,
-  );
+  return Boolean(c.cni?.trim() && c.cniRectoFile && c.cniVersoFile);
 }
 
 /**

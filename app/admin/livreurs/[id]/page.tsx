@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil, IdCard, Phone, Mail, MapPin, Building2, Landmark, Package, PackageCheck, FileText, ExternalLink } from "lucide-react";
+import { ArrowLeft, Pencil, IdCard, Phone, Mail, MapPin, Building2, Landmark, Package, PackageCheck, FileText, ExternalLink, Truck } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AccountStatutBadge } from "@/components/ui/StatutBadge";
 import { getServerT, type ServerT } from "@/lib/i18n/server";
@@ -46,6 +46,8 @@ export default async function LivreurDetailPage({ params }: { params: Promise<{ 
               <Row icon={<Phone className="h-4 w-4" />} label={t("col.telephone")} value={l.telephone} />
               <Row icon={<Mail className="h-4 w-4" />} label={t("detail.emailConnexion")} value={l.email} />
               <Row icon={<Building2 className="h-4 w-4" />} label={t("col.agence")} value={l.agence} />
+              <Row icon={<Truck className="h-4 w-4" />} label={t("lf.typeVehicule")} value={t(`veh.${l.vehicleType}`)} />
+              <Row icon={<Truck className="h-4 w-4" />} label={t("lf.matricule")} value={l.matricule ?? "—"} />
               <Row icon={<MapPin className="h-4 w-4" />} label={t("col.ville")} value={l.ville} />
               <Row icon={<MapPin className="h-4 w-4" />} label={t("profil.adresse")} value={l.adresse ?? "—"} />
             </div>

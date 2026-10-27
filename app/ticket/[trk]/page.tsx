@@ -18,6 +18,8 @@ export default async function TicketPage({ params }: { params: Promise<{ trk: st
   const { trk } = await params;
   const colis = await getColisDetail(decodeURIComponent(trk));
   if (!colis) notFound();
+  // A client may only view/print the ticket of its own colis.
+  if (user.role === "CLIENT" && colis.clientId !== user.client?.id) notFound();
 
   return <ColisTicket colis={colis} />;
 }

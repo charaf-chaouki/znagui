@@ -46,8 +46,12 @@ const SECTIONS: Section[] = [
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  // Boundary-aware: exact match, or a path segment under href — so
+  // "/admin/expeditions-livreur" does NOT activate "/admin/expeditions".
   const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    href === "/admin"
+      ? pathname === "/admin"
+      : pathname === href || pathname.startsWith(href + "/");
 
   return (
     <>

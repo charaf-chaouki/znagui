@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Pencil, IdCard, Phone, Mail, MapPin, Landmark, Package, PackageCheck } from "lucide-react";
+import { ArrowLeft, Pencil, IdCard, Phone, Mail, MapPin, Landmark, Package, PackageCheck, Truck } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AccountStatutBadge } from "@/components/ui/StatutBadge";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -48,6 +48,8 @@ export default async function AgenceLivreurDetailPage({ params }: { params: Prom
               <Row icon={<IdCard className="h-4 w-4" />} label={t("profil.cni")} value={l.cni} />
               <Row icon={<Phone className="h-4 w-4" />} label={t("col.telephone")} value={l.telephone} />
               <Row icon={<Mail className="h-4 w-4" />} label={t("col.email")} value={l.email} />
+              <Row icon={<Truck className="h-4 w-4" />} label={t("lf.typeVehicule")} value={t(`veh.${l.vehicleType}`)} />
+              <Row icon={<Truck className="h-4 w-4" />} label={t("lf.matricule")} value={l.matricule ?? "—"} />
               <Row icon={<MapPin className="h-4 w-4" />} label={t("col.ville")} value={l.ville} />
               <Row icon={<MapPin className="h-4 w-4" />} label={t("profil.adresse")} value={l.adresse ?? "—"} />
             </div>

@@ -37,6 +37,7 @@ export default async function AgenceLivreursPage({
       ),
     },
     { header: t("col.ville"), cell: (l) => <span className="text-muted">{l.ville}</span> },
+    { header: t("col.vehicule"), cell: (l) => <span className="text-muted">{t(`veh.${l.vehicleType}`)}</span> },
     { header: t("col.livraisons"), cell: (l) => <span className="font-semibold">{l.livraisons}</span>, className: "text-center", thClassName: "text-center" },
     { header: t("col.statut"), cell: (l) => <AccountStatutBadge statut={l.status} /> },
     { header: "", cell: (l) => <LivreurActionsMenu id={l.id} status={l.status} basePath="/agence/livreurs" />, thClassName: "w-12" },

@@ -20,12 +20,12 @@ export function LanguageProvider({ initialLocale, children }: { initialLocale: L
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
   const dir = LOCALE_META[locale].dir;
 
-  // Keep <html lang> in sync for accessibility/typography. The RTL direction is
-  // applied on the dashboard container (DirBoundary), not <html>, so it never
-  // leaks onto the public pages when navigating out of the dashboard.
+  // Keep <html lang>/<html dir> in sync so the whole app (public + dashboard)
+  // mirrors for Arabic (RTL) immediately on switch, before the server re-render.
   useEffect(() => {
     document.documentElement.lang = locale;
-  }, [locale]);
+    document.documentElement.dir = dir;
+  }, [locale, dir]);
 
   const setLocale = useCallback(
     (next: Locale) => {

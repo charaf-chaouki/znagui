@@ -216,6 +216,8 @@ model Livreur {
   ribFile       String?       @map("rib_file")
   villeId       String        @map("ville_id") @db.Char(36)
   adresse       String?
+  vehicleType   VehicleType   @default(MOTO) @map("vehicle_type")
+  matricule     String?
   statusAccount AccountStatus @default(PENDING) @map("status_account")
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")

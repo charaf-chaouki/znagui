@@ -43,8 +43,12 @@ const SECTIONS: Section[] = [
 export function AgenceSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  // Boundary-aware: exact match, or a path segment under href — so
+  // "/agence/expeditions-livreur" does NOT activate "/agence/expeditions".
   const isActive = (href: string) =>
-    href === "/agence" ? pathname === "/agence" : pathname.startsWith(href);
+    href === "/agence"
+      ? pathname === "/agence"
+      : pathname === href || pathname.startsWith(href + "/");
 
   return (
     <>
