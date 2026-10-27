@@ -47,7 +47,7 @@ export default async function FactureLivreurDetailPage({ params }: { params: Pro
         subtitle={tv("fd.subColis", { name: `${f.livreur.prenom} ${f.livreur.nom}`, n: f.lignes.length })}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <a href={`/api/pdf?p=${encodeURIComponent(`/admin/factures-livreurs/${f.id}/pdf`)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <a href={`/api/pdf/facture-livreur/${f.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
               <Printer className="h-4 w-4" /> {t("common.pdf")}
             </a>
             <FactureLivreurStatusControl id={f.id} statut={f.statut} />

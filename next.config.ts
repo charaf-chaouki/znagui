@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
-  serverExternalPackages: ["puppeteer-core"],
+  serverExternalPackages: ["puppeteer-core", "@react-pdf/renderer"],
   turbopack: {
     // Pin the workspace root to THIS project. Without it, Turbopack infers the
     // root from the stray package-lock.json in C:\wamp64\www and watches every

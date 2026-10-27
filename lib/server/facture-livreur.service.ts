@@ -255,6 +255,7 @@ export async function getFactureLivreurDetail(id: string): Promise<FactureLivreu
   return {
     id: f.id,
     reference: f.reference ?? f.id.slice(0, 8).toUpperCase(),
+    livreurId: f.livreurId,
     livreur: {
       nom: f.livreur.nom,
       prenom: f.livreur.prenom,

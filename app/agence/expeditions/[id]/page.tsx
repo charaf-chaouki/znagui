@@ -39,7 +39,7 @@ export default async function AgenceExpeditionDetailPage({ params }: { params: P
         title={tv("ed.ref", { ref: e.reference })}
         subtitle={tv("ed.subDateMode", { date: e.date, mode: isDest ? t("ed.reception") : t("ed.envoi") })}
         action={
-          <a href={`/api/pdf?p=${encodeURIComponent(`/agence/expeditions/${e.id}/pdf`)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          <a href={`/api/pdf/expedition-agence/${e.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
             <Printer className="h-4 w-4" /> {t("ed.bordereauPdf")}
           </a>
         }

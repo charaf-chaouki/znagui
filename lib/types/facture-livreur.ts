@@ -47,6 +47,7 @@ export interface FactureLivreurTotals {
 export interface FactureLivreurDetail {
   id: string;
   reference: string;
+  livreurId: string;
   livreur: { nom: string; prenom: string; telephone: string; ville: string; agence: string };
   statut: FactureStatut;
   date: string;

@@ -46,7 +46,7 @@ export function FactureLivreurActionsMenu({ id, statut, basePath = "/admin/factu
           <Link href={`${basePath}/${id}`} className={item} onClick={() => setOpen(false)}>
             <Eye className="h-4 w-4 text-slate-400" /> {t("action.voirPdf")}
           </Link>
-          <a href={`${basePath}/${id}/pdf`} target="_blank" rel="noopener noreferrer" className={item} onClick={() => setOpen(false)}>
+          <a href={`/api/pdf/facture-livreur/${id}`} target="_blank" rel="noopener noreferrer" className={item} onClick={() => setOpen(false)}>
             <Printer className="h-4 w-4 text-slate-400" /> {t("action.imprimer")}
           </a>
           <div className="my-1 border-t border-slate-100" />
