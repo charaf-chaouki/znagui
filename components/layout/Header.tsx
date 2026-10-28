@@ -10,7 +10,6 @@ import type { MessageKey } from "@/lib/i18n/dictionaries";
 
 const NAV: { href: string; key: MessageKey }[] = [
   { href: "/#services", key: "home.nav.services" },
-  { href: "/tarifs", key: "home.nav.tarifs" },
   { href: "/#comment", key: "home.nav.comment" },
   { href: "/suivi", key: "home.nav.suivi" },
   { href: "/#faq", key: "home.nav.faq" },

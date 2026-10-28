@@ -14,7 +14,6 @@ const SERVICES: MessageKey[] = [
 ];
 const LINKS: { key: MessageKey; href: string }[] = [
   { key: "home.footer.home", href: "/" },
-  { key: "home.nav.tarifs", href: "/tarifs" },
   { key: "home.nav.faq", href: "/#faq" },
   { key: "home.nav.contact", href: "/#contact" },
   { key: "home.nav.signup", href: "/inscription" },
