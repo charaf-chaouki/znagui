@@ -16,12 +16,16 @@ export class LivreurPortalError extends Error {
 }
 
 const A_RAMASSER: ColisStatut[] = ["AFFECTE_RAMASSAGE", "DISPONIBLE_A_RAMASSER"];
-const ECHOUEE: ColisStatut[] = ["REPORTE", "PAS_DE_REPONSE", "REFUSE", "RETOUR"];
+// REPORTE / PAS_DE_REPONSE are not failures — the livreur retries them, so they
+// live in the "En cours" group alongside EN_COURS_DE_LIVRAISON. Only REFUSE /
+// RETOUR are terminal failures surfaced under "Échoués".
+const EN_LIVRAISON: ColisStatut[] = ["EN_COURS_DE_LIVRAISON", "REPORTE", "PAS_DE_REPONSE"];
+const ECHOUEE: ColisStatut[] = ["REFUSE", "RETOUR"];
 
 function groupWhere(livreurId: string, group: LivreurColisGroup): Prisma.ColisWhereInput {
   if (group === "LIVRE") return { livreurLivraisonId: livreurId, statut: "LIVRE" };
   if (group === "ECHOUEE") return { livreurLivraisonId: livreurId, statut: { in: ECHOUEE } };
-  return { livreurLivraisonId: livreurId, statut: "EN_COURS_DE_LIVRAISON" };
+  return { livreurLivraisonId: livreurId, statut: { in: EN_LIVRAISON } };
 }
 
 function cardOf(c: {
