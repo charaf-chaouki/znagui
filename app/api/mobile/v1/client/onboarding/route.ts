@@ -6,8 +6,9 @@ import { clientGate } from "@/lib/auth/onboarding";
 
 const schema = z.object({
   cni: z.string().min(3, "CNI requise"),
-  banque: z.string().min(2, "Banque requise"),
-  rib: z.string().min(4, "RIB requis"),
+  // Bank details are optional — only the CIN number + both photos are required.
+  banque: z.string().optional().nullable(),
+  rib: z.string().optional().nullable(),
   cniRectoFile: z.string().min(1, "Photo CIN recto requise"),
   cniVersoFile: z.string().min(1, "Photo CIN verso requise"),
   ribFile: z.string().optional().nullable(),
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   const { cni, banque, rib, cniRectoFile, cniVersoFile, ribFile } = parsed.data;
   await prisma.client.update({
     where: { id: account.client!.id },
-    data: { cni, banque, rib, cniRectoFile, cniVersoFile, ribFile: ribFile || null },
+    data: { cni, banque: banque || null, rib: rib || null, cniRectoFile, cniVersoFile, ribFile: ribFile || null },
   });
   // Account stays PENDING until an admin/agence validates it.
   const gate = clientGate(account.status, { cni, banque, rib, cniRectoFile, cniVersoFile });
