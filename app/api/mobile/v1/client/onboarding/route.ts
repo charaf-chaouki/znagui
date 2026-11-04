@@ -31,6 +31,6 @@ export async function POST(req: Request) {
     data: { cni, banque: banque || null, rib: rib || null, cniRectoFile, cniVersoFile, ribFile: ribFile || null },
   });
   // Account stays PENDING until an admin/agence validates it.
-  const gate = clientGate(account.status, { cni, banque, rib, cniRectoFile, cniVersoFile });
+  const gate = clientGate(account.status, { cni, banque: banque ?? null, rib: rib ?? null, cniRectoFile, cniVersoFile });
   return mobileJson(req, { ok: true, onboardingRoute: gate });
 }
