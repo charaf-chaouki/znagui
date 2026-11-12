@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { Menu, Bell, Search, ChevronDown, LogOut, User } from "lucide-react";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
@@ -9,10 +10,12 @@ export function Topbar({
   onMenuToggle,
   name,
   role,
+  profileHref,
 }: {
   onMenuToggle: () => void;
   name: string;
   role: string;
+  profileHref?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -75,9 +78,19 @@ export function Topbar({
 
           {open && (
             <div className="absolute end-0 mt-1 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
-              <button className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50">
-                <User className="h-4 w-4" /> {t("topbar.myProfile")}
-              </button>
+              {profileHref ? (
+                <Link
+                  href={profileHref}
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  <User className="h-4 w-4" /> {t("topbar.myProfile")}
+                </Link>
+              ) : (
+                <button className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50">
+                  <User className="h-4 w-4" /> {t("topbar.myProfile")}
+                </button>
+              )}
               <div className="my-1 border-t border-slate-100" />
               <button
                 onClick={logout}

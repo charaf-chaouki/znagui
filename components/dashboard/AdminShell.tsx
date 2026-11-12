@@ -21,7 +21,7 @@ export function AdminShell({
     <DirBoundary className="flex h-dvh overflow-hidden bg-surface">
       <Sidebar open={open} onClose={() => setOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onMenuToggle={() => setOpen(true)} name={name} role={role} />
+        <Topbar onMenuToggle={() => setOpen(true)} name={name} role={role} profileHref="/admin/profil" />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
